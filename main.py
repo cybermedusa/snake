@@ -1,33 +1,48 @@
 import pygame
+import random
 
+window_game = pygame.display.set_mode((400, 400))
+
+apple = pygame.image.load('apple.png')
 
 class SnakeBody:
-
     def __init__(self, x, y, w, h):
         self.x = x
         self.y = y
         self.w = w
         self.h = h
 
+    def draw_snake(self):
+        pygame.draw.rect(window_game, 'black', [self.x, self.y, self.w, self.h], 2)
 
-snake_body = SnakeBody(50, 50, 20, 20)
+class Apple:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def draw_apple(self):
+        window_game.blit(apple, (self.x, self.y))
+
+
+snake_body_element_1 = SnakeBody(10, 50, 20, 20)
+snake_body_element_2 = SnakeBody(30, 50, 20, 20)
+snake_body_element_3 = SnakeBody(50, 50, 20, 20)
+
+snake_body = [snake_body_element_1, snake_body_element_2, snake_body_element_3]
+
+apple_1 = Apple(random.randint(24, 400), random.randint(24, 400))
 
 pygame.init()
 
-window_game = pygame.display.set_mode((400, 400))
-
 clock = pygame.time.Clock()
 
-dx = 10
+dx = 20
 dy = 0
 
 running = True
 while running:
 
-    clock.tick(5)
-
-    snake_body.x += dx
-    snake_body.y += dy
+    clock.tick(3)
 
     for event in pygame.event.get():
 
@@ -36,28 +51,40 @@ while running:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RIGHT:
-                dx = 10
+                dx = 20
                 dy = 0
-                print(snake_body.x, snake_body.y)
 
             if event.key == pygame.K_LEFT:
-                dx = -10
+                dx = -20
                 dy = 0
-                print(snake_body.x, snake_body.y)
 
             if event.key == pygame.K_UP:
-                dy = -10
+                dy = -20
                 dx = 0
-                print(snake_body.x, snake_body.y)
 
             if event.key == pygame.K_DOWN:
-                dy = 10
+                dy = 20
                 dx = 0
-                print(snake_body.x, snake_body.y)
 
     window_game.fill((255, 255, 255))
 
-    pygame.draw.rect(window_game, 'black', [snake_body.x, snake_body.y, snake_body.w, snake_body.h])
+    apple_1.draw_apple()
+
+    new_element = SnakeBody(snake_body[-1].x+dx, snake_body[-1].y+dy, snake_body[-1].w, snake_body[-1].h)
+
+    snake_body.append(new_element)
+
+    snake_body.pop(0)
+
+    for snake_body_element in snake_body:
+
+        snake_body_element.draw_snake()
+
+    # if snake_body[-1].x in range(apple_1.x, apple_1.x+24) or snake_body[-1].y in range(apple_1.y, apple_1.y+24):
+    # if snake_body[-1].x >= apple_1.x and snake_body[-1].x <=
+    #     print(snake_body[-1].x, snake_body[-1].y)
+    #     print(apple_1.x, apple_1.y)
+    #     print('Collision')
 
     pygame.display.flip()
 
