@@ -10,10 +10,9 @@ window_height = 420
 window_game = pygame.display.set_mode((window_width, window_height))
 step = 20
 score = 0
+game_over = False
 
 pygame.display.set_caption('Snake')
-
-
 
 
 class Snake:
@@ -42,12 +41,9 @@ class Apple:
                                                    self.h])
 
 
-def game_over():
-    font_game_over = pygame.font.Font('freesansbold.ttf', 30)
-    text_game_over = font_game_over.render('Game Over!', True, 'blue', 'yellow')
-    text_game_over_rect = text_game_over.get_rect()
-    text_game_over_rect.center = ((window_width - 20) // 2, (window_height - 20) // 2)
-    window_game.blit(text_game_over, text_game_over_rect)
+def on_game_over():
+    global game_over
+    game_over = True
 
 
 def show_score():
@@ -59,6 +55,11 @@ def show_score():
 
 
 def restart_or_quit():
+    font_game_over = pygame.font.Font('freesansbold.ttf', 30)
+    text_game_over = font_game_over.render('Game Over!', True, 'blue', 'yellow')
+    text_game_over_rect = text_game_over.get_rect()
+    text_game_over_rect.center = ((window_width - 20) // 2, (window_height - 20) // 2)
+    window_game.blit(text_game_over, text_game_over_rect)
     font_restart = pygame.font.Font('freesansbold.ttf', 20)
     text_restart = font_restart.render('Type R to restart the game', True, 'pink', 'blue')
     text_quit = font_restart.render('or type Q to quit', True, 'pink', 'blue')
@@ -76,12 +77,14 @@ def init_game():
     global score
     global direction
     global change_dir
+    global game_over
 
     snake_body = [snake_body_element_1, snake_body_element_2, snake_body_element_3]
     apple = Apple(random_apple_x, random_apple_y)
     direction = 'Right'
     change_dir = direction
     score = 0
+    game_over = False
 
 
 random_apple_x = random.randrange(20, window_width - 20, step)
@@ -99,15 +102,10 @@ clock = pygame.time.Clock()
 dx = 20
 dy = 0
 
-left_disabled = False
-right_disabled = False
-
-game = True
 direction = 'Right'
 change_dir = direction
 running = True
 while running:
-
     clock.tick(5)
 
     for event in pygame.event.get():
@@ -158,73 +156,40 @@ while running:
 
     window_game.fill((255, 255, 255))
 
-    snake_head = Snake(snake_body[-1].x + dx, snake_body[-1].y + dy)
-
-    snake_body.append(snake_head)
-
-    snake_body.pop(0)
-
-    for snake_body_element in snake_body:
-        snake_body_element.draw()
-        # print(snake_body_element.x, snake_body_element.y)
-
-    apple.draw()
-
-    if direction == 'Right':
-        if snake_body[-1].x+20 == apple.x and snake_body[-1].y == apple.y:
-
-            apple.x = random.randrange(20, window_width - 20, step)
-            apple.y = random.randrange(20, window_height - 20, step)
-
-            snake_tail = Snake(snake_body[0].x, snake_body[0].y)
-            snake_body.insert(0, snake_tail)
-
-            score += 1
-
-    if direction == 'Left':
-        if snake_body[-1].x == apple.x+20 and snake_body[-1].y == apple.y:
-            apple.x = random.randrange(20, window_width - 20, step)
-            apple.y = random.randrange(20, window_height - 20, step)
-
-            snake_tail = Snake(snake_body[0].x, snake_body[0].y)
-            snake_body.insert(0, snake_tail)
-
-            score += 1
-
-    if direction == 'Up':
-        if snake_body[-1].x == apple.x and snake_body[-1].y == apple.y+20:
-            apple.x = random.randrange(20, window_width - 20, step)
-            apple.y = random.randrange(20, window_height - 20, step)
-
-            snake_tail = Snake(snake_body[0].x, snake_body[0].y)
-            snake_body.insert(0, snake_tail)
-
-            score += 1
-
-    if direction == 'Down':
-        if snake_body[-1].x == apple.x and snake_body[-1].y+20 == apple.y:
-            apple.x = random.randrange(20, window_width - 20, step)
-            apple.y = random.randrange(20, window_height - 20, step)
-
-            snake_tail = Snake(snake_body[0].x, snake_body[0].y)
-            snake_body.insert(0, snake_tail)
-
-            score += 1
-
-    if snake_body[-1].x < 0 or snake_body[-1].x > 400 or snake_body[-1].y < 20 or snake_body[-1].y > 400:
-        game_over()
+    if game_over:
+        print("game over")
         restart_or_quit()
-        time.sleep(2)
+    else:
+        snake_head = Snake(snake_body[-1].x + dx, snake_body[-1].y + dy)
+        snake_body.append(snake_head)
+        snake_body.pop(0)
 
-    for snake_element in range(0, len(snake_body)-1):
-        if snake_body[-1].x == snake_body[snake_element].x and snake_body[-1].y == snake_body[snake_element].y:
-            game_over()
-            restart_or_quit()
-            time.sleep(2)
-            print('Game Over')
+        for snake_body_element in snake_body:
+            snake_body_element.draw()
+            # print(snake_body_element.x, snake_body_element.y)
+
+        eat_apple = snake_body[-1].x == apple.x and snake_body[-1].y == apple.y
+        if eat_apple:
+            apple.x = random.randrange(20, window_width - 20, step)
+            apple.y = random.randrange(20, window_height - 20, step)
+
+            snake_tail = Snake(snake_body[0].x, snake_body[0].y)
+            snake_body.insert(0, snake_tail)
+
+            score += 1
+
+        out_of_border = snake_body[-1].x < 0 or snake_body[-1].x > 400 or snake_body[-1].y < 20 or snake_body[-1].y > 400
+        if out_of_border:
+            on_game_over()
+
+        for snake_element in range(0, len(snake_body) - 1):
+            eat_snake = snake_body[-1].x == snake_body[snake_element].x and snake_body[-1].y == snake_body[snake_element].y
+            if eat_snake:
+                on_game_over()
+
+        apple.draw()
 
     show_score()
-
     pygame.display.flip()
 
 pygame.quit()
