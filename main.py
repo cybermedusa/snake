@@ -23,14 +23,14 @@ class Snake:
         self.h = 20
 
     def draw(self):
-        pygame.draw.rect(window_game, 'black', [self.x, self.y, self.w, self.h], 2)
+        return pygame.draw.rect(window_game, '#823FF3', [self.x, self.y, self.w, self.h], 2)
 
 
 class Apple:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.color = 'red'
+        self.color = '#FF007B'
         self.w = 20
         self.h = 20
 
@@ -41,6 +41,41 @@ class Apple:
                                                    self.h])
 
 
+class Text:
+    def __init__(self, name, size, text, color, bkg_color, coordinates):
+        self.name = name
+        self.size = size
+        self.text = text
+        self.color = color
+        self.bkg_color = bkg_color
+        self.coordinates = coordinates
+
+    def show_score(self):
+        font = pygame.font.Font(self.name, self.size)
+        text = font.render(self.text + str(score), True, self.color, self.bkg_color)
+        rect = text.get_rect()
+        rect.center = self.coordinates
+        window_game.blit(text, rect)
+
+    def restart_or_quit(self):
+        font = pygame.font.Font(self.name, self.size)
+        text = font.render(self.text, True, self.color, self.bkg_color)
+        rect = text.get_rect()
+        rect.center = self.coordinates
+        window_game.blit(text, rect)
+
+
+game_over_text = Text('freesansbold.ttf', 30, 'Game Over!', '#392A46', '#FDF7FF',
+                      ((window_width - 20) // 2, (window_height - 20) // 2))
+
+score_text = Text('freesansbold.ttf', 15, 'Score: ', '#392A46', '#FDF7FF', (210, 10))
+
+quit_text = Text('freesansbold.ttf', 20, 'or type Q to quit', '#FDF7FF', '#392A46',
+                 ((window_width - 20) // 2, (window_height + 145) // 2))
+
+restart_text = Text('freesansbold.ttf', 20, 'Type R to restart the game', '#FDF7FF', '#392A46',
+                    ((window_width - 20) // 2, (window_height + 100) // 2))
+
 def on_game_over():
     global game_over
     game_over = True
@@ -48,7 +83,7 @@ def on_game_over():
 
 def show_score():
     font_score = pygame.font.Font('freesansbold.ttf', 15)
-    text_score = font_score.render('Score: ' + str(score), True, 'blue', 'yellow')
+    text_score = font_score.render('Score: ' + str(score), True, '#392A46', '#FDF7FF')
     text_score_rect = text_score.get_rect()
     text_score_rect.center = (210, 10)
     window_game.blit(text_score, text_score_rect)
@@ -56,13 +91,13 @@ def show_score():
 
 def restart_or_quit():
     font_game_over = pygame.font.Font('freesansbold.ttf', 30)
-    text_game_over = font_game_over.render('Game Over!', True, 'blue', 'yellow')
+    text_game_over = font_game_over.render('Game Over!', True, '#392A46', '#FDF7FF')
     text_game_over_rect = text_game_over.get_rect()
     text_game_over_rect.center = ((window_width - 20) // 2, (window_height - 20) // 2)
     window_game.blit(text_game_over, text_game_over_rect)
     font_restart = pygame.font.Font('freesansbold.ttf', 20)
-    text_restart = font_restart.render('Type R to restart the game', True, 'pink', 'blue')
-    text_quit = font_restart.render('or type Q to quit', True, 'pink', 'blue')
+    text_restart = font_restart.render('Type R to restart the game', True, '#FDF7FF', '#392A46')
+    text_quit = font_restart.render('or type Q to quit', True, '#FDF7FF', '#392A46')
     text_restart_rect = text_restart.get_rect()
     text_quit_rect = text_quit.get_rect()
     text_restart_rect.center = ((window_width - 20) // 2, (window_height + 100) // 2)
@@ -106,7 +141,7 @@ direction = 'Right'
 change_dir = direction
 running = True
 while running:
-    clock.tick(5)
+    clock.tick(20)
 
     for event in pygame.event.get():
 
@@ -157,39 +192,47 @@ while running:
     window_game.fill((255, 255, 255))
 
     if game_over:
-        print("game over")
-        restart_or_quit()
+        game_over_text.restart_or_quit()
+        restart_text.restart_or_quit()
+        quit_text.restart_or_quit()
+        # restart_or_quit()
     else:
         snake_head = Snake(snake_body[-1].x + dx, snake_body[-1].y + dy)
         snake_body.append(snake_head)
         snake_body.pop(0)
 
-        for snake_body_element in snake_body:
-            snake_body_element.draw()
-            # print(snake_body_element.x, snake_body_element.y)
+        list(map(lambda snake_body_element: snake_body_element.draw(), snake_body))
 
-        eat_apple = snake_body[-1].x == apple.x and snake_body[-1].y == apple.y
-        if eat_apple:
+        apple_on_snake = list(filter(lambda sbe: sbe.x == apple.x and sbe.y == apple.y, snake_body[:-1]))
+        if apple_on_snake:
             apple.x = random.randrange(20, window_width - 20, step)
             apple.y = random.randrange(20, window_height - 20, step)
+            print("jabko ktore jest na snejku: " + str(apple.x), str(apple.y))
 
-            snake_tail = Snake(snake_body[0].x, snake_body[0].y)
-            snake_body.insert(0, snake_tail)
+        else:
+            eat_apple = snake_body[-1].x == apple.x and snake_body[-1].y == apple.y
+            if eat_apple:
+                apple.x = random.randrange(20, window_width - 20, step)
+                apple.y = random.randrange(20, window_height - 20, step)
+                print("jabko ktore nie jest na snejku: " + str(apple.x), str(apple.y))
 
-            score += 1
+                snake_tail = Snake(snake_body[0].x, snake_body[0].y)
+                snake_body.insert(0, snake_tail)
 
-        out_of_border = snake_body[-1].x < 0 or snake_body[-1].x > 400 or snake_body[-1].y < 20 or snake_body[-1].y > 400
-        if out_of_border:
-            on_game_over()
+                score += 1
 
-        for snake_element in range(0, len(snake_body) - 1):
-            eat_snake = snake_body[-1].x == snake_body[snake_element].x and snake_body[-1].y == snake_body[snake_element].y
+            out_of_border = snake_body[-1].x < 0 or snake_body[-1].x > 400 or snake_body[-1].y < 20 or snake_body[-1].y > 400
+            if out_of_border:
+                on_game_over()
+
+            eat_snake = list(filter(lambda sbe: snake_body[-1].x == sbe.x and snake_body[-1].y == sbe.y, snake_body[:-1]))
             if eat_snake:
                 on_game_over()
 
-        apple.draw()
+            apple.draw()
 
-    show_score()
+    # show_score()
+    score_text.show_score()
     pygame.display.flip()
 
 pygame.quit()
