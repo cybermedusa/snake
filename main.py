@@ -1,5 +1,4 @@
 import time
-
 import pygame
 import random
 
@@ -10,9 +9,18 @@ window_height = 420
 window_game = pygame.display.set_mode((window_width, window_height))
 step = 20
 score = 0
+speed = 5
 game_over = False
 
 pygame.display.set_caption('Snake')
+
+all_coordinates = []
+for i in range(0, 401, 20):
+    for j in range(0, 401, 20):
+        if j == 0:
+            pass
+        else:
+            all_coordinates.append([i, j])
 
 
 class Snake:
@@ -30,7 +38,7 @@ class Apple:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.color = '#FF007B'
+        self.color = '#201926'
         self.w = 20
         self.h = 20
 
@@ -57,7 +65,7 @@ class Text:
         rect.center = self.coordinates
         window_game.blit(text, rect)
 
-    def restart_or_quit(self):
+    def show(self):
         font = pygame.font.Font(self.name, self.size)
         text = font.render(self.text, True, self.color, self.bkg_color)
         rect = text.get_rect()
@@ -76,34 +84,10 @@ quit_text = Text('freesansbold.ttf', 20, 'or type Q to quit', '#FDF7FF', '#392A4
 restart_text = Text('freesansbold.ttf', 20, 'Type R to restart the game', '#FDF7FF', '#392A46',
                     ((window_width - 20) // 2, (window_height + 100) // 2))
 
+
 def on_game_over():
     global game_over
     game_over = True
-
-
-def show_score():
-    font_score = pygame.font.Font('freesansbold.ttf', 15)
-    text_score = font_score.render('Score: ' + str(score), True, '#392A46', '#FDF7FF')
-    text_score_rect = text_score.get_rect()
-    text_score_rect.center = (210, 10)
-    window_game.blit(text_score, text_score_rect)
-
-
-def restart_or_quit():
-    font_game_over = pygame.font.Font('freesansbold.ttf', 30)
-    text_game_over = font_game_over.render('Game Over!', True, '#392A46', '#FDF7FF')
-    text_game_over_rect = text_game_over.get_rect()
-    text_game_over_rect.center = ((window_width - 20) // 2, (window_height - 20) // 2)
-    window_game.blit(text_game_over, text_game_over_rect)
-    font_restart = pygame.font.Font('freesansbold.ttf', 20)
-    text_restart = font_restart.render('Type R to restart the game', True, '#FDF7FF', '#392A46')
-    text_quit = font_restart.render('or type Q to quit', True, '#FDF7FF', '#392A46')
-    text_restart_rect = text_restart.get_rect()
-    text_quit_rect = text_quit.get_rect()
-    text_restart_rect.center = ((window_width - 20) // 2, (window_height + 100) // 2)
-    text_quit_rect.center = ((window_width - 20) // 2, (window_height + 145) // 2)
-    window_game.blit(text_restart, text_restart_rect)
-    window_game.blit(text_quit, text_quit_rect)
 
 
 def init_game():
@@ -113,20 +97,18 @@ def init_game():
     global direction
     global change_dir
     global game_over
+    global speed
 
     snake_body = [snake_body_element_1, snake_body_element_2, snake_body_element_3]
-    apple = Apple(random_apple_x, random_apple_y)
     direction = 'Right'
     change_dir = direction
     score = 0
+    speed = 5
     game_over = False
 
 
-random_apple_x = random.randrange(20, window_width - 20, step)
-random_apple_y = random.randrange(20, window_height - 20, step)
-apple = Apple(random_apple_x, random_apple_y)
+apple = Apple(80, 100)
 
-# init self.min self.max self.step
 snake_body_element_1 = Snake(20, 40)
 snake_body_element_2 = Snake(40, 40)
 snake_body_element_3 = Snake(60, 40)
@@ -141,7 +123,7 @@ direction = 'Right'
 change_dir = direction
 running = True
 while running:
-    clock.tick(20)
+    clock.tick(speed)
 
     for event in pygame.event.get():
 
@@ -192,46 +174,43 @@ while running:
     window_game.fill((255, 255, 255))
 
     if game_over:
-        game_over_text.restart_or_quit()
-        restart_text.restart_or_quit()
-        quit_text.restart_or_quit()
-        # restart_or_quit()
+        game_over_text.show()
+        restart_text.show()
+        quit_text.show()
     else:
         snake_head = Snake(snake_body[-1].x + dx, snake_body[-1].y + dy)
         snake_body.append(snake_head)
         snake_body.pop(0)
 
-        list(map(lambda snake_body_element: snake_body_element.draw(), snake_body))
+        draw_snake = list(map(lambda snake_body_element: snake_body_element.draw(), snake_body))
 
-        apple_on_snake = list(filter(lambda sbe: sbe.x == apple.x and sbe.y == apple.y, snake_body[:-1]))
-        if apple_on_snake:
-            apple.x = random.randrange(20, window_width - 20, step)
-            apple.y = random.randrange(20, window_height - 20, step)
-            print("jabko ktore jest na snejku: " + str(apple.x), str(apple.y))
+        eat_apple = snake_body[-1].x == apple.x and snake_body[-1].y == apple.y
 
-        else:
-            eat_apple = snake_body[-1].x == apple.x and snake_body[-1].y == apple.y
-            if eat_apple:
-                apple.x = random.randrange(20, window_width - 20, step)
-                apple.y = random.randrange(20, window_height - 20, step)
-                print("jabko ktore nie jest na snejku: " + str(apple.x), str(apple.y))
+        if eat_apple:
+            available_apple_coordinates = all_coordinates
+            for i in snake_body:
+                if [i.x, i.y] in available_apple_coordinates:
+                    available_apple_coordinates.remove([i.x, i.y])
 
-                snake_tail = Snake(snake_body[0].x, snake_body[0].y)
-                snake_body.insert(0, snake_tail)
+            random_apple = random.choice(available_apple_coordinates)
+            apple.x, apple.y = random_apple[0], random_apple[1]
 
-                score += 1
+            snake_tail = Snake(snake_body[0].x, snake_body[0].y)
+            snake_body.insert(0, snake_tail)
 
-            out_of_border = snake_body[-1].x < 0 or snake_body[-1].x > 400 or snake_body[-1].y < 20 or snake_body[-1].y > 400
-            if out_of_border:
-                on_game_over()
+            score += 1
+            speed += 0.25
 
-            eat_snake = list(filter(lambda sbe: snake_body[-1].x == sbe.x and snake_body[-1].y == sbe.y, snake_body[:-1]))
-            if eat_snake:
-                on_game_over()
+        out_of_border = snake_body[-1].x < 0 or snake_body[-1].x > 400 or snake_body[-1].y < 20 or snake_body[-1].y > 400
+        if out_of_border:
+            on_game_over()
 
-            apple.draw()
+        eat_snake = list(filter(lambda sbe: snake_body[-1].x == sbe.x and snake_body[-1].y == sbe.y, snake_body[:-1]))
+        if eat_snake:
+            on_game_over()
 
-    # show_score()
+        apple.draw()
+
     score_text.show_score()
     pygame.display.flip()
 
