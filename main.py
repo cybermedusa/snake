@@ -192,7 +192,7 @@ while running:
                 if [i.x, i.y] in available_apple_coordinates:
                     available_apple_coordinates.remove([i.x, i.y])
 
-            random_apple = random.choice(available_apple_coordinates)
+            random_apple = available_apple_coordinates[random.randrange(0, len(available_apple_coordinates))]
             apple.x, apple.y = random_apple[0], random_apple[1]
 
             snake_tail = Snake(snake_body[0].x, snake_body[0].y)
