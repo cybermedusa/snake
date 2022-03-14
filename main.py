@@ -7,7 +7,6 @@ pygame.init()
 window_width = 420
 window_height = 420
 window_game = pygame.display.set_mode((window_width, window_height))
-step = 20
 score = 0
 speed = 5
 game_over = False
